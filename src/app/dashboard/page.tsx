@@ -47,21 +47,30 @@ export default function Dashboard() {
     setTotalAmount(total)
   }, [subscriptions])
 
+  // 📧 Envoi automatique de rappel
   useEffect(() => {
-    if (!user) return
+    if (!user || !user.email) return
+
     subscriptions.forEach((sub) => {
       const daysLeft = getDaysLeft(sub.renewalDate)
-      if (daysLeft === 3) {
-        sendReminderEmail({
-          userEmail: user.email,
-          subscriptionName: sub.name,
-          subscriptionAmount: sub.amount.toString(),
-          renewalDate: sub.renewalDate,
-          daysLeft,
-        })
+
+      if (daysLeft >= 1 && daysLeft <= 3) {
+        const localKey = `emailSent-${user.uid}-${sub.id}`
+
+        const alreadySent = localStorage.getItem(localKey)
+        if (!alreadySent) {
+          sendReminderEmail({
+            userEmail: user.email,
+            subscriptionName: sub.name,
+            subscriptionAmount: sub.amount.toString(),
+            renewalDate: sub.renewalDate,
+            daysLeft,
+          })
+          localStorage.setItem(localKey, new Date().toISOString())
+        }
       }
     })
-  }, [subscriptions])
+  }, [subscriptions, user])
 
   const handleAddSubscription = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -184,14 +193,14 @@ export default function Dashboard() {
             <div>
               <strong>{sub.name}</strong> — 💰 {sub.amount}€ — 📅 {sub.renewalDate} <br />
               {getDaysLeft(sub.renewalDate) <= 3 ? (
-                  <span className="text-sm text-red-300 font-semibold">
-                    🔔 Renouvellement dans {getDaysLeft(sub.renewalDate)} jour(s)
-                  </span>
-                ) : (
-                  <span className="text-sm text-gray-200">
-                    ⏳ Renouvellement dans {getDaysLeft(sub.renewalDate)} jour(s)
-                  </span>
-                )}
+                <span className="text-sm text-red-300 font-semibold">
+                  🔔 Renouvellement dans {getDaysLeft(sub.renewalDate)} jour(s)
+                </span>
+              ) : (
+                <span className="text-sm text-gray-200">
+                  ⏳ Renouvellement dans {getDaysLeft(sub.renewalDate)} jour(s)
+                </span>
+              )}
             </div>
             <button
               onClick={() => handleDelete(sub.id)}

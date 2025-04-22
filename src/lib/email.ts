@@ -1,4 +1,4 @@
-import emailjs from 'emailjs-com'
+import emailjs from '@emailjs/browser'
 
 export const sendReminderEmail = ({
   userEmail,
@@ -13,31 +13,27 @@ export const sendReminderEmail = ({
   renewalDate: string
   daysLeft: number
 }) => {
-  console.log("Tentative d’envoi avec :", {
+  const params = {
     user_email: userEmail,
     subscription_name: subscriptionName,
     subscription_amount: subscriptionAmount,
     renewal_date: renewalDate,
     days_left: daysLeft,
-  })
+  }
+
+  console.log("📧 Tentative d’envoi d’email avec :", params)
 
   return emailjs
     .send(
       process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
       process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-      {
-        user_email: userEmail,
-        subscription_name: subscriptionName,
-        subscription_amount: subscriptionAmount,
-        renewal_date: renewalDate,
-        days_left: daysLeft,
-      },
+      params,
       process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
     )
     .then((res) => {
       console.log('✅ Email envoyé :', res.status, res.text)
     })
     .catch((err) => {
-        console.error('❌ Erreur EmailJS complète :', JSON.stringify(err, null, 2))
-      })      
+      console.error('❌ Erreur EmailJS complète :', JSON.stringify(err, null, 2))
+    })
 }
